@@ -2,27 +2,33 @@ let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
 
 document
   .getElementById("destinationForm")
-  .addEventListener("submit", function (e) {
+  .addEventListener("submit", async function (e) {
     e.preventDefault();
     const name = document.getElementById("destinationName").value.trim();
     const location = document.getElementById("location").value.trim();
-    const photo = document.getElementById("photo").value.trim();
     const description = document
       .getElementById("description")
       .value.trim();
 
     if (name && location) {
-      const defaultPhoto =
-        "https://cavchronicle.org/wp-content/uploads/2018/03/top-travel-destination-for-visas-900x504.jpg";
-      wishlist.push({
-        name,
-        location,
-        photo: photo || defaultPhoto,
-        description,
-      });
-      localStorage.setItem("wishlist", JSON.stringify(wishlist));
-      renderWishlist();
-      this.reset();
+      try {
+        const response = await fetch(`/.netlify/functions/unsplash-search?query=${encodeURIComponent(name)}`);
+        const data = await response.json();
+        const photo = data.photo_url || "https://cavchronicle.org/wp-content/uploads/2018/03/top-travel-destination-for-visas-900x504.jpg";
+
+        wishlist.push({
+          name,
+          location,
+          photo,
+          description,
+        });
+        localStorage.setItem("wishlist", JSON.stringify(wishlist));
+        renderWishlist();
+        this.reset();
+      } catch (error) {
+        console.error("Error fetching photo:", error);
+        alert("An error occurred while fetching the photo. Please try again.");
+      }
     } else {
       alert("Please enter both a destination name and location.");
     }
