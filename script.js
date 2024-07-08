@@ -34,6 +34,7 @@ document
     }
   });
 
+
 function renderWishlist() {
   const wishlistDiv = document.getElementById("wishlist");
   wishlistDiv.innerHTML = "";
