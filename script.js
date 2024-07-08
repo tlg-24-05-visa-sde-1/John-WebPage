@@ -6,15 +6,19 @@ document
     e.preventDefault();
     const name = document.getElementById("destinationName").value.trim();
     const location = document.getElementById("location").value.trim();
-    const description = document
-      .getElementById("description")
-      .value.trim();
+    const description = document.getElementById("description").value.trim();
 
     if (name && location) {
       try {
-        const response = await fetch(`/.netlify/functions/unsplash-search?query=${encodeURIComponent(name)}`);
+        const response = await fetch(
+          `/.netlify/functions/unsplash-search?query=${encodeURIComponent(
+            name
+          )}`
+        );
         const data = await response.json();
-        const photo = data.photo_url || "https://cavchronicle.org/wp-content/uploads/2018/03/top-travel-destination-for-visas-900x504.jpg";
+        const photo =
+          data.photo_url ||
+          "https://cavchronicle.org/wp-content/uploads/2018/03/top-travel-destination-for-visas-900x504.jpg";
 
         wishlist.push({
           name,
@@ -34,7 +38,6 @@ document
     }
   });
 
-
 function renderWishlist() {
   const wishlistDiv = document.getElementById("wishlist");
   wishlistDiv.innerHTML = "";
@@ -42,40 +45,59 @@ function renderWishlist() {
     const itemDiv = document.createElement("div");
     itemDiv.className = "wishlist-item";
     itemDiv.innerHTML = `
-      <img src="${item.photo}" alt="${item.name}">
-      <div class="wishlist-info">
-        <h3>${item.name}</h3>
-        <p>${item.location}</p>
-        <p>${item.description}</p>
-        <div class="button-container">
-          <button onclick="editDestination(${index})" class="btn btn-warning btn-sm">Edit</button>
-          <button onclick="removeDestination(${index})" class="btn btn-danger btn-sm">Remove</button>
+        <img src="${item.photo}" alt="${item.name}">
+        <div class="wishlist-info">
+          <h3>${item.name}</h3>
+          <p>${item.location}</p>
+          <p>${item.description}</p>
+          <div class="button-container">
+            <button onclick="editDestination(${index})" class="btn btn-warning btn-sm">Edit</button>
+            <button onclick="removeDestination(${index})" class="btn btn-danger btn-sm">Remove</button>
+          </div>
         </div>
-      </div>
-    `;
+      `;
     wishlistDiv.appendChild(itemDiv);
   });
 }
 
-function editDestination(index) {
+async function editDestination(index) {
   const item = wishlist[index];
-  const fields = ["name", "location", "photo", "description"];
+  const fields = ["name", "location", "description"];
   let updated = false;
+  let newName;
 
   for (let field of fields) {
     const newValue = prompt(
       `Enter new ${field} (current: ${item[field]}):`,
       item[field]
     );
-    if (newValue !== null) {
+    if (newValue !== null && newValue.trim() !== item[field]) {
       item[field] = newValue.trim();
       updated = true;
-    } else {
-      break;
+      if (field === "name") {
+        newName = newValue.trim();
+      }
     }
   }
 
   if (updated) {
+    if (newName) {
+      try {
+        const response = await fetch(
+          `/.netlify/functions/unsplash-search?query=${encodeURIComponent(
+            newName
+          )}`
+        );
+        const data = await response.json();
+        if (response.ok && data.photo_url) {
+          item.photo = data.photo_url;
+        } else {
+          console.error("Error fetching new photo:", data.error);
+        }
+      } catch (error) {
+        console.error("Error fetching new photo:", error);
+      }
+    }
     localStorage.setItem("wishlist", JSON.stringify(wishlist));
     renderWishlist();
   }
