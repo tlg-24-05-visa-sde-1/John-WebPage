@@ -2,37 +2,31 @@ let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
 
 document
   .getElementById("destinationForm")
-  .addEventListener("submit", async function (e) {
+  .addEventListener("submit", function (e) {
     e.preventDefault();
     const name = document.getElementById("destinationName").value.trim();
     const location = document.getElementById("location").value.trim();
     const description = document.getElementById("description").value.trim();
 
     if (name && location) {
-      try {
-        const response = await fetch(
-          `/.netlify/functions/unsplash-search?query=${encodeURIComponent(
-            name
-          )}`
-        );
-        const data = await response.json();
-        const photo =
-          data.photo_url ||
-          "https://cavchronicle.org/wp-content/uploads/2018/03/top-travel-destination-for-visas-900x504.jpg";
-
-        wishlist.push({
-          name,
-          location,
-          photo,
-          description,
+      fetch(`/.netlify/functions/unsplash-search?query=${encodeURIComponent(name)}`)
+        .then(response => response.json())
+        .then(data => {
+          const photo = data.photo_url || "https://cavchronicle.org/wp-content/uploads/2018/03/top-travel-destination-for-visas-900x504.jpg";
+          wishlist.push({
+            name,
+            location,
+            photo,
+            description,
+          });
+          localStorage.setItem("wishlist", JSON.stringify(wishlist));
+          renderWishlist();
+          this.reset();
+        })
+        .catch(error => {
+          console.error("Error fetching photo:", error);
+          alert("An error occurred while fetching the photo. Please try again.");
         });
-        localStorage.setItem("wishlist", JSON.stringify(wishlist));
-        renderWishlist();
-        this.reset();
-      } catch (error) {
-        console.error("Error fetching photo:", error);
-        alert("An error occurred while fetching the photo. Please try again.");
-      }
     } else {
       alert("Please enter both a destination name and location.");
     }
@@ -60,7 +54,7 @@ function renderWishlist() {
   });
 }
 
-async function editDestination(index) {
+function editDestination(index) {
   const item = wishlist[index];
   const fields = ["name", "location", "description"];
   let updated = false;
@@ -82,24 +76,24 @@ async function editDestination(index) {
 
   if (updated) {
     if (newName) {
-      try {
-        const response = await fetch(
-          `/.netlify/functions/unsplash-search?query=${encodeURIComponent(
-            newName
-          )}`
-        );
-        const data = await response.json();
-        if (response.ok && data.photo_url) {
-          item.photo = data.photo_url;
-        } else {
-          console.error("Error fetching new photo:", data.error);
-        }
-      } catch (error) {
-        console.error("Error fetching new photo:", error);
-      }
+      fetch(`/.netlify/functions/unsplash-search?query=${encodeURIComponent(newName)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.photo_url) {
+            item.photo = data.photo_url;
+          }
+          localStorage.setItem("wishlist", JSON.stringify(wishlist));
+          renderWishlist();
+        })
+        .catch(error => {
+          console.error("Error fetching new photo:", error);
+          localStorage.setItem("wishlist", JSON.stringify(wishlist));
+          renderWishlist();
+        });
+    } else {
+      localStorage.setItem("wishlist", JSON.stringify(wishlist));
+      renderWishlist();
     }
-    localStorage.setItem("wishlist", JSON.stringify(wishlist));
-    renderWishlist();
   }
 }
 
