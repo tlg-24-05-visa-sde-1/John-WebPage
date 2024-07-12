@@ -1,12 +1,12 @@
-import { getWeather } from './api.js';
+import { getWeather } from "./api.js";
 
 export function renderWishlist(wishlistItems, editCallback, removeCallback) {
   const wishlistDiv = document.getElementById("wishlist");
   wishlistDiv.innerHTML = "";
   wishlistItems.forEach((item, index) => {
-      const itemDiv = document.createElement("div");
-      itemDiv.className = "wishlist-item";
-      itemDiv.innerHTML = `
+    const itemDiv = document.createElement("div");
+    itemDiv.className = "wishlist-item";
+    itemDiv.innerHTML = `
           <img src="${item.photo}" alt="${item.name}">
           <div class="wishlist-info">
               <h3>${item.name}</h3>
@@ -21,19 +21,24 @@ export function renderWishlist(wishlistItems, editCallback, removeCallback) {
           </div>
       `;
 
-      itemDiv.querySelector('.edit-btn').addEventListener('click', () => editCallback(index));
-      itemDiv.querySelector('.remove-btn').addEventListener('click', () => removeCallback(index));
+    itemDiv
+      .querySelector(".edit-btn")
+      .addEventListener("click", () => editCallback(index));
+    itemDiv
+      .querySelector(".remove-btn")
+      .addEventListener("click", () => removeCallback(index));
 
-      wishlistDiv.appendChild(itemDiv);
+    wishlistDiv.appendChild(itemDiv);
 
-      try {
-        // Initialize map
-        const map = L.map(`map-${index}`).setView([0, 0], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+    try {
+      // Initialize map
+      const map = L.map(`map-${index}`).setView([0, 0], 2);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(map);
 
-        getWeather(item.location).then(weather => {
+      getWeather(item.location)
+        .then((weather) => {
           const weatherDiv = document.getElementById(`weather-${index}`);
           if (weatherDiv) {
             weatherDiv.innerHTML = `Temperature: ${weather.main.temp}°C, ${weather.weather[0].description}`;
@@ -41,21 +46,20 @@ export function renderWishlist(wishlistItems, editCallback, removeCallback) {
             map.setView([lat, lon], 10);
             L.marker([lat, lon]).addTo(map);
           }
-        }).catch(error => {
-          console.error('Error fetching weather:', error);
+        })
+        .catch((error) => {
+          console.error("Error fetching weather:", error);
           const weatherDiv = document.getElementById(`weather-${index}`);
           if (weatherDiv) {
-            weatherDiv.innerHTML = 'Weather data not available';
+            weatherDiv.innerHTML = "Weather data not available";
           }
         });
-      } catch (error) {
-        console.error('Error initializing map or weather:', error);
-      }
-    });
-  }
+    } catch (error) {
+      console.error("Error initializing map or weather:", error);
+    }
+  });
+}
 
-  export function showAlert(message) {
-    alert(message);
-  }
-
-import { getWeather } from './api.js';
+export function showAlert(message) {
+  alert(message);
+}
