@@ -1,3 +1,5 @@
+import { getWeather } from './api.js';
+
 export function renderWishlist(wishlistItems, editCallback, removeCallback) {
   const wishlistDiv = document.getElementById("wishlist");
   wishlistDiv.innerHTML = "";
@@ -24,25 +26,36 @@ export function renderWishlist(wishlistItems, editCallback, removeCallback) {
 
       wishlistDiv.appendChild(itemDiv);
 
-      // Initialize map
-      const map = L.map(`map-${index}`).setView([0, 0], 2);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      try {
+        // Initialize map
+        const map = L.map(`map-${index}`).setView([0, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
+        }).addTo(map);
 
-      // Fetch and display weather and map
-      getWeather(item.location).then(weather => {
+        getWeather(item.location).then(weather => {
           const weatherDiv = document.getElementById(`weather-${index}`);
-          weatherDiv.innerHTML = `Temperature: ${weather.main.temp}°C, ${weather.weather[0].description}`;
-          const { lat, lon } = weather.coord;
-          map.setView([lat, lon], 10);
-          L.marker([lat, lon]).addTo(map);
-      }).catch(error => {
-          const weatherDiv = document.getElementById(`weather-${index}`);
-          weatherDiv.innerHTML = 'Weather data not available';
+          if (weatherDiv) {
+            weatherDiv.innerHTML = `Temperature: ${weather.main.temp}°C, ${weather.weather[0].description}`;
+            const { lat, lon } = weather.coord;
+            map.setView([lat, lon], 10);
+            L.marker([lat, lon]).addTo(map);
+          }
+        }).catch(error => {
           console.error('Error fetching weather:', error);
-      });
-  });
-}
+          const weatherDiv = document.getElementById(`weather-${index}`);
+          if (weatherDiv) {
+            weatherDiv.innerHTML = 'Weather data not available';
+          }
+        });
+      } catch (error) {
+        console.error('Error initializing map or weather:', error);
+      }
+    });
+  }
+
+  export function showAlert(message) {
+    alert(message);
+  }
 
 import { getWeather } from './api.js';

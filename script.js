@@ -1,28 +1,28 @@
 import Wishlist from "./wishlist.js";
-import { getPhotoUrl, getWeather } from "./api.js";
+import { getPhotoUrl } from "./api.js";
 import { renderWishlist, showAlert } from "./ui.js";
 
 const wishlist = new Wishlist();
 
 document
   .getElementById("destinationForm")
-  .addEventListener("submit", async function (e) {
+  .addEventListener("submit", function (e) {
     e.preventDefault();
     const name = document.getElementById("destinationName").value.trim();
     const location = document.getElementById("location").value.trim();
     const description = document.getElementById("description").value.trim();
 
     if (name && location) {
-      try {
-        const photo = await getPhotoUrl(name);
-        wishlist.add({ name, location, photo, description });
-        renderWishlist(wishlist.getItems(), editDestination, removeDestination);
-        this.reset();
-      } catch (error) {
-        showAlert(
-          "An error occurred while fetching the photo. Please try again."
-        );
-      }
+      getPhotoUrl(name)
+        .then(photo => {
+          wishlist.add({ name, location, photo, description });
+          renderWishlist(wishlist.getItems(), editDestination, removeDestination);
+          this.reset();
+        })
+        .catch(error => {
+          console.error("Error adding destination:", error);
+          showAlert("An error occurred while adding the destination. Please try again.");
+        });
     } else {
       showAlert("Please enter both a destination name and location.");
     }
@@ -80,4 +80,9 @@ function removeDestination(index) {
   renderWishlist(wishlist.getItems(), editDestination, removeDestination);
 }
 
-renderWishlist(wishlist.getItems(), editDestination, removeDestination);
+try {
+  renderWishlist(wishlist.getItems(), editDestination, removeDestination);
+} catch (error) {
+  console.error("Error rendering initial wishlist:", error);
+  showAlert("An error occurred while loading the wishlist. Please refresh the page.");
+}
